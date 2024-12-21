@@ -1,52 +1,128 @@
-// Renyl A. Banua
+#include <stdio.h>  // input-output library for file operations and basic IO functions
+#include <stdlib.h> // standard library for  memory allocation
 
-#include <stdio.h>  // input-output library for file and console operations
-#include <stdlib.h> // library for memory management and process control
-#include <string.h> // string manipulation functions
-#include <ctype.h>  // character classification and conversion functions
+// function prototypes
+int romanToDecimal(const char *roman);
+void numberToWords(long long num, char *words);
+int isValidRoman(const char *roman);
+int processExpression(const char *expression, char *result);
+void processFile(const char *inputFile, const char *outputFile);
 
-// Function prototypes
-int romanToDecimal(const char *roman);                           // converts a Roman numeral to a decimal integer
-void numberToWords(long long num, char *words);                  // converts a number to its word representation
-int isValidRoman(const char *roman);                             // validates whether a string is a valid Roman numeral
-int processExpression(const char *expression, char *result);     // processes arithmetic expressions involving Roman numerals
-void processFile(const char *inputFile, const char *outputFile); // processes input file and generates output file
-
-// Convert Roman numeral to decimal
-int romanToDecimal(const char *roman)
+// function to convert a character to uppercase
+int charToUpper(int ch)
 {
-    int values[256] = {0}; // array to store Roman numeral values
-    values['I'] = 1;       // value 1 to 'I'
-    values['V'] = 5;       // value 5 to 'V'
-    values['X'] = 10;      // value 10 to 'X'
-    values['L'] = 50;      // value 50 to 'L'
-    values['C'] = 100;     // value 100 to 'C'
-    values['D'] = 500;     // value 500 to 'D'
-    values['M'] = 1000;    // value 1000 to 'M'
-
-    int total = 0, prevValue = 0; // initialize total sum and previous Roman numeral value
-    for (int i = 0; roman[i] != '\0'; i++)
-    {                                                                           // loop through each character of the Roman numeral string
-        int currValue = values[toupper(roman[i])];                              // get the value of the current Roman numeral
-        total += currValue > prevValue ? currValue - 2 * prevValue : currValue; // adjust based on subtraction rule
-        prevValue = currValue;                                                  // update previous value for next iteration
-    }
-    return total; // return the total decimal value
+    // if character is lowercase, convert to uppercase; otherwise, return as is
+    return (ch >= 'a' && ch <= 'z') ? ch - 'a' + 'A' : ch;
 }
 
-// Validate if a string is a valid Roman numeral
+// function to calculate the length of a string
+size_t stringLength(const char *str)
+{
+    size_t len = 0;
+    // count characters until null terminator is reached
+    while (str[len] != '\0')
+    {
+        len++;
+    }
+    return len;
+}
+
+// function to compare two strings lexicographically
+int stringCompare(const char *str1, const char *str2)
+{
+    // iterate through both strings until characters differ or null terminator is reached
+    while (*str1 && *str2 && *str1 == *str2)
+    {
+        str1++;
+        str2++;
+    }
+    // return the difference between characters
+    return *str1 - *str2;
+}
+
+// function to copy the content of one string into another
+char *stringCopy(char *dest, const char *src)
+{
+    char *start = dest;
+    // copy characters until null terminator is encountered
+    while ((*dest++ = *src++))
+        ;
+    return start;
+}
+
+// function to concatenate two strings
+char *stringConcat(char *dest, const char *src)
+{
+    char *start = dest;
+    // move pointer to the end of the destination string
+    while (*dest)
+    {
+        dest++;
+    }
+    // append source string to destination string
+    while ((*dest++ = *src++))
+        ;
+    return start;
+}
+
+// function to validate roman numeral characters
 int isValidRoman(const char *roman)
 {
-    const char *validChars = "IVXLCDM"; // accepted Roman numeral characters
+    const char validChars[] = "IVXLCDM"; // valid roman numeral characters
     while (*roman)
-    {                                               // iterate through the string
-        if (!strchr(validChars, toupper(*roman++))) // check if the character is not in validChars
-            return 0;                               // if invalid character is found, return 0
+    {
+        int isValid = 0;
+        // check if each character matches any valid roman numeral character
+        for (int i = 0; validChars[i] != '\0'; i++)
+        {
+            if (charToUpper(*roman) == validChars[i])
+            {
+                isValid = 1;
+                break;
+            }
+        }
+        // if an invalid character is found, return false
+        if (!isValid)
+        {
+            return 0;
+        }
+        roman++;
     }
-    return 1; //  if all characters are valid, return 1
+    return 1; // return true if all characters are valid
 }
 
-// Convert a number to words
+// function to convert a roman numeral to decimal value
+int romanToDecimal(const char *roman)
+{
+    int values[256] = {0}; // initialize an array to map roman numeral characters to their values
+    values['I'] = 1;
+    values['V'] = 5;
+    values['X'] = 10;
+    values['L'] = 50;
+    values['C'] = 100;
+    values['D'] = 500;
+    values['M'] = 1000;
+
+    int total = 0, prevValue = 0; // initialize total and previous value
+    while (*roman)
+    {
+        int currValue = values[charToUpper(*roman++)]; // get the value of the current character
+        if (currValue > prevValue)
+        {
+            // subtract twice the previous value if a smaller numeral precedes a larger one
+            total += currValue - 2 * prevValue;
+        }
+        else
+        {
+            // otherwise, simply add the value
+            total += currValue;
+        }
+        prevValue = currValue; // update previous value
+    }
+    return total; // return the decimal equivalent
+}
+
+// funnction to convert a number into its word representation
 void numberToWords(long long num, char *words)
 {
     const char *units[] = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"};
@@ -54,93 +130,161 @@ void numberToWords(long long num, char *words)
     const char *tens[] = {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
     const char *thousands[] = {"", "Thousand", "Million", "Billion"};
 
-    char temp[500] = ""; // temp. buffer to store words
+    char temp[500] = ""; // temporary buffer to words
     for (int i = 0; num > 0; i++)
-    {                           // process the number in chunks of 3 digits
-        int chunk = num % 1000; // extract the last 3 digits
+    {
+        int chunk = num % 1000; // process three digits at a time
         if (chunk)
-        {                                                         // if the chunk is non-zero, convert it to words
-            char part[100] = "";                                  // temporary buffer for the current chunk
-            if (chunk / 100)                                      // if there are hundreds
-                sprintf(part, "%s Hundred ", units[chunk / 100]); // add the hundreds place
-            if (chunk % 100 >= 20)                                // if there are tens
-                sprintf(part + strlen(part), "%s ", tens[(chunk % 100) / 10]);
-            if (chunk % 100 >= 10 && chunk % 100 < 20) // if the number is a teen
-                sprintf(part + strlen(part), "%s ", teens[chunk % 100 - 10]);
-            if (chunk % 10 && chunk % 100 < 10) // if there are units
-                sprintf(part + strlen(part), "%s ", units[chunk % 10]);
-            if (i) // add the appropriate thousand-level suffix
-                sprintf(part + strlen(part), "%s ", thousands[i]);
-            strcat(part, temp); // append the current chunk to the result
-            strcpy(temp, part); // update the temporary buffer
+        {
+            char part[100] = "";
+            // handle hundreds place
+            if (chunk / 100)
+            {
+                stringConcat(part, units[chunk / 100]);
+                stringConcat(part, " Hundred ");
+            }
+            // handle tens and units place
+            if (chunk % 100 >= 20)
+            {
+                stringConcat(part, tens[(chunk % 100) / 10]);
+                stringConcat(part, " ");
+            }
+            if (chunk % 100 >= 10 && chunk % 100 < 20)
+            {
+                stringConcat(part, teens[chunk % 100 - 10]);
+                stringConcat(part, " ");
+            }
+            if (chunk % 10 && chunk % 100 < 10)
+            {
+                stringConcat(part, units[chunk % 10]);
+                stringConcat(part, " ");
+            }
+            // append the appropriate scale (thousands, millions, etc.)
+            if (i)
+            {
+                stringConcat(part, thousands[i]);
+                stringConcat(part, " ");
+            }
+            // merge the current part with the result
+            stringConcat(part, temp);
+            stringCopy(temp, part);
         }
-        num /= 1000; // move to the next chunk
+        num /= 1000; // move to the next three digits
     }
-    strcpy(words, temp);             // copy the final result to the output
-    words[strlen(words) - 1] = '\0'; // remove trailing space
+    stringCopy(words, temp); // copy final result to the output buffer
+    if (stringLength(words) > 0)
+    {
+        words[stringLength(words) - 1] = '\0'; // remove trailing space
+    }
 }
 
-// Process a Roman arithmetic expression
+// function to process a mathematical expression involving roman numerals
 int processExpression(const char *expression, char *result)
 {
-    char roman1[50], roman2[50], operand; // buffers to hold the operands and operator
-    if (sscanf(expression, "%s %c %s", roman1, &operand, roman2) != 3 || !isValidRoman(roman1) || !isValidRoman(roman2))
-        return 0; // validate the operands and expression
+    char roman1[50] = "", roman2[50] = ""; // buffers for roman numerals
+    char operand = 0;
+    int i = 0, j = 0;
 
-    long long num1 = romanToDecimal(roman1), num2 = romanToDecimal(roman2), res = 0;
+    // extract the first roman numeral
+    while (expression[i] != ' ' && expression[i] != '\0')
+    {
+        roman1[j++] = expression[i++];
+    }
+    roman1[j] = '\0';
+    if (expression[i] == '\0') // invalid if no operator is found
+    {
+        return 0;
+    }
+    operand = expression[++i]; // extract the operator
+    i += 2;                    // skip space and move to the second operand
 
-    if (operand == '+') // addition
+    // extract the second roman numeral
+    j = 0;
+    while (expression[i] != '\0')
+    {
+        roman2[j++] = expression[i++];
+    }
+    roman2[j] = '\0';
+
+    // validate both roman numerals
+    if (!isValidRoman(roman1) || !isValidRoman(roman2))
+    {
+        return 0;
+    }
+
+    // convert roman numerals to decimal
+    long long num1 = romanToDecimal(roman1);
+    long long num2 = romanToDecimal(roman2);
+    long long res = 0;
+
+    // perform the operation based on the operator
+    if (operand == '+')
+    {
         res = num1 + num2;
-    else if (operand == '-' && num1 >= num2) //  subtraction
+    }
+    else if (operand == '-' && num1 >= num2)
+    {
         res = num1 - num2;
-    else if (operand == '*') //  multiplication
+    }
+    else if (operand == '*')
+    {
         res = num1 * num2;
-    else if (operand == '^') //  multiplication
-        res = num1 * num2;
-    else if (operand == '/' && num2 != 0) // division
+    }
+    else if (operand == '/' && num2 != 0)
+    {
         res = num1 / num2;
+    }
     else
-        return 0; //  for invalid operations, return 0
+    {
+        return 0; // invalid operation
+    }
 
-    numberToWords(res, result); // convert the result to words
-    return 1;                   // return success
+    // convert the result to words
+    numberToWords(res, result);
+    return 1;
 }
 
-// Process input file and output results
+// function to process a file containing roman numerals
 void processFile(const char *inputFile, const char *outputFile)
 {
-    FILE *in = fopen(inputFile, "r"), *out = fopen(outputFile, "w");
-    if (!in || !out)
-    {                                // check if the files are accessible
-        printf("File corrupted.\n"); // print error if file cannot be opened
-        exit(1);                     // exit
+    FILE *in = fopen(inputFile, "r");   // open the input file for reading
+    FILE *out = fopen(outputFile, "w"); // open the output file for writing
+    if (!in || !out)                    // exit if file cannot be opened
+    {
+        exit(1);
     }
 
-    char line[100], result[500]; // buffers for input line and result
-    while (fgets(line, sizeof(line), in))
-    {                                     // read each line from the input file
-        line[strcspn(line, "\n")] = '\0'; // remove trailing newline
-        if (isValidRoman(line))
-        {                                                // if line is a valid Roman numeral
-            numberToWords(romanToDecimal(line), result); // convert it to words
-            fprintf(out, "%s\n", result);                // write the result to the output file
+    char line[100], result[500];
+    while (fgets(line, sizeof(line), in)) // read each line from the input file
+    {
+        int len = stringLength(line);
+        if (len > 0 && line[len - 1] == '\n') // remove trailing newline character
+        {
+            line[len - 1] = '\0';
         }
-        else if (processExpression(line, result))
-        {                                 // if line is a valid expression
-            fprintf(out, "%s\n", result); // write the result to the output file
+
+        if (isValidRoman(line)) // process if the line contains a roman numeral
+        {
+            numberToWords(romanToDecimal(line), result);
+            fprintf(out, "%s\n", result);
         }
-        else
-        {                                                       // if line is invalid
-            fprintf(out, "Invalid Roman Numerals: %s\n", line); // write error message to output
+        else if (processExpression(line, result)) // process if the line contains an expression
+        {
+            fprintf(out, "%s\n", result);
+        }
+        else // output an error message for invalid input
+        {
+            fprintf(out, "Invalid Roman Numerals: %s\n", line);
         }
     }
 
-    fclose(in);  // close input file
-    fclose(out); // close output file
+    fclose(in);  // close the input file
+    fclose(out); // close the output file
 }
 
+// main function
 int main()
 {
-    processFile("input.txt", "output.txt"); // process the input and output files
+    processFile("input.txt", "output.txt"); // process input and output files
     return 0;                               // end of the program
 }
