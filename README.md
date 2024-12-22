@@ -9,7 +9,7 @@
 
 ## 🎓 Submitted To
 
-- **Professor:** Dexter Romaguera  
+- **Instructor:** Dexter Romaguera  
 
 ---
 
